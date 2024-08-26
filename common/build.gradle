@@ -34,7 +34,7 @@ dependencies {
 }
 
 architectury {
-    common("fabric", "forge", "neoforge")
+    common("fabric", "neoforge")
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {

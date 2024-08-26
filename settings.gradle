@@ -14,7 +14,6 @@ if (JavaVersion.current().ordinal() + 1 < 21) {
 
 include("common")
 include("fabric")
-include("forge")
 include("neoforge")
 
 rootProject.name = 'dawn-config'
