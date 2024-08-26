@@ -1,0 +1,41 @@
+{
+    "schemaVersion": 1,
+    "id": "dawn-config",
+    "name": "Dawn Config API",
+    "description": "A fork of Cloth Config API using Night Config as the serializer.",
+    "version": "${version}",
+    "authors": [
+        "shedaniel",
+        "Raxdiam"
+    ],
+    "contact": {
+        "homepage": "https://github.com/Raxdiam/DawnConfig",
+        "sources": "https://github.com/Raxdiam/DawnConfig",
+        "issues": "https://github.com/Raxdiam/DawnConfig/issues"
+    },
+    "license": "GPL-3.0",
+    "icon": "assets/dawn-config/icon.png",
+    "entrypoints": {
+        "client": [
+            "com.raxdiam.dawn.example.ExampleInits::exampleCommonInit"
+        ],
+        "modmenu": [
+            "com.raxdiam.dawn.fabric.DawnConfigModMenuDemo"
+        ]
+    },
+    "depends": {
+        "fabricloader": ">=0.14.0",
+        "minecraft": ">=1.21-"
+    },
+    "accessWidener": "dawn-config.accessWidener",
+    "custom": {
+        "modmenu": {
+            "badges": [
+                "library"
+            ]
+        },
+        "catalogue": {
+            "configFactory": "com.raxdiam.dawn.fabric.DawnConfigCatalogueDemo"
+        }
+    }
+}

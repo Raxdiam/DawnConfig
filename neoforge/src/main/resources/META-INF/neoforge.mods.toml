@@ -1,0 +1,22 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+issueTrackerURL = "https://github.com/Raxdiam/DawnConfig/issues/"
+displayURL = "https://github.com/Raxdiam/DawnConfig/"
+logoFile = "assets/dawn-config/icon.png"
+authors = ["shedaniel", "Raxdiam"]
+license = "GNU GPL 3.0"
+
+[[mods]]
+modId = "dawn_config"
+version = "${version}"
+displayName = "Dawn Config API"
+description = '''
+A fork of Cloth Config API using Night Config as the serializer.
+'''
+
+[[dependencies.dawn_config]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.0.110-beta,)"
+ordering = "NONE"
+side = "BOTH"
