@@ -40,7 +40,6 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -54,8 +53,6 @@ import java.util.function.Predicate;
 
 @Environment(EnvType.CLIENT)
 public abstract class DynamicEntryListWidget<E extends DynamicEntryListWidget.Entry<E>> extends AbstractContainerEventHandler implements Renderable, NarratableEntry {
-    public static final ResourceLocation VERTICAL_HEADER_SEPARATOR = ResourceLocation.parse("dawn-config:textures/gui/vertical_header_separator.png");
-    public static final ResourceLocation VERTICAL_FOOTER_SEPARATOR = ResourceLocation.parse("dawn-config:textures/gui/vertical_footer_separator.png");
     protected static final int DRAG_OUTSIDE = -2;
     protected final Minecraft client;
     private final List<E> entries = new Entries();
@@ -278,11 +275,12 @@ public abstract class DynamicEntryListWidget<E extends DynamicEntryListWidget.En
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         Matrix4f matrix = graphics.pose().last().pose();
         float float_2 = 32.0F;
-        tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        buffer.addVertex(matrix, this.left, this.bottom, 0.0F).setUv(this.left / 32.0F, ((this.bottom + (int) this.getScroll()) / 32.0F)).setColor(32, 32, 32, 255);
-        buffer.addVertex(matrix, this.right, this.bottom, 0.0F).setUv(this.right / 32.0F, ((this.bottom + (int) this.getScroll()) / 32.0F)).setColor(32, 32, 32, 255);
-        buffer.addVertex(matrix, this.right, this.top, 0.0F).setUv(this.right / 32.0F, ((this.top + (int) this.getScroll()) / 32.0F)).setColor(32, 32, 32, 255);
-        buffer.addVertex(matrix, this.left, this.top, 0.0F).setUv(this.left / 32.0F, ((this.top + (int) this.getScroll()) / 32.0F)).setColor(32, 32, 32, 255);
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        buffer.vertex(matrix, this.left, this.bottom, 0.0F).uv(this.left / 32.0F, ((this.bottom + (int) this.getScroll()) / 32.0F)).color(32, 32, 32, 255).endVertex();
+        buffer.vertex(matrix, this.right, this.bottom, 0.0F).uv(this.right / 32.0F, ((this.bottom + (int) this.getScroll()) / 32.0F)).color(32, 32, 32, 255).endVertex();
+        buffer.vertex(matrix, this.right, this.top, 0.0F).uv(this.right / 32.0F, ((this.top + (int) this.getScroll()) / 32.0F)).color(32, 32, 32, 255).endVertex();
+        buffer.vertex(matrix, this.left, this.top, 0.0F).uv(this.left / 32.0F, ((this.top + (int) this.getScroll()) / 32.0F)).color(32, 32, 32, 255).endVertex();
+        tessellator.end();
     }
     
     @Override
@@ -297,7 +295,7 @@ public abstract class DynamicEntryListWidget<E extends DynamicEntryListWidget.En
         int scrollbarPosition = this.getScrollbarPosition();
         int int_4 = scrollbarPosition + 6;
         Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = tesselator.getBuilder();
         renderBackBackground(graphics, buffer, tesselator);
         int rowLeft = this.getRowLeft();
         int startY = this.top + 4 - (int) this.getScroll();
@@ -310,10 +308,8 @@ public abstract class DynamicEntryListWidget<E extends DynamicEntryListWidget.En
         this.renderHoleBackground(graphics, 0, this.top, 255, 255);
         this.renderHoleBackground(graphics, this.bottom, this.height, 255, 255);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.enableBlend();
-        graphics.blit(CreateWorldScreen.HEADER_SEPARATOR, this.left, this.top - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
-        graphics.blit(CreateWorldScreen.FOOTER_SEPARATOR, this.left, this.bottom, 0.0F, 0.0F, this.width, 2, 32, 2);
-        RenderSystem.disableBlend();
+        graphics.fillGradient(this.left, this.top, this.right, this.top + 4, 0xff000000, 0);
+        graphics.fillGradient(this.left, this.bottom - 4, this.right, this.bottom, 0, 0xff000000);
         
         int maxScroll = this.getMaxScroll();
         renderScrollBar(graphics, tesselator, buffer, maxScroll, scrollbarPosition, int_4);
@@ -501,14 +497,14 @@ public abstract class DynamicEntryListWidget<E extends DynamicEntryListWidget.En
         }
     }
     
-    public boolean mouseScrolled(double double_1, double double_2, double amountX, double amountY) {
+    public boolean mouseScrolled(double double_1, double double_2, double double_3) {
         for (E entry : visibleChildren()) {
-            if (entry.mouseScrolled(double_1, double_2, amountX, amountY)) {
+            if (entry.mouseScrolled(double_1, double_2, double_3)) {
                 return true;
             }
         }
-        this.capYPosition(this.getScroll() - amountY * (double) (getMaxScroll() / getItemCount()) / 2.0D);
-        return amountY != 0;
+        this.capYPosition(this.getScroll() - double_3 * (double) (getMaxScroll() / getItemCount()) / 2.0D);
+        return true;
     }
     
     public boolean keyPressed(int int_1, int int_2, int int_3) {
@@ -543,7 +539,7 @@ public abstract class DynamicEntryListWidget<E extends DynamicEntryListWidget.En
     
     protected void renderList(GuiGraphics graphics, int startX, int startY, int mouseX, int mouseY, float delta) {
         Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = tesselator.getBuilder();
         
         hoveredItem = this.isMouseOver(mouseX, mouseY) ? this.getItemAtPosition(mouseX, mouseY) : null;
         
@@ -600,15 +596,17 @@ public abstract class DynamicEntryListWidget<E extends DynamicEntryListWidget.En
     
     protected void renderHoleBackground(GuiGraphics graphics, int y1, int y2, int alpha1, int alpha2) {
         Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = tesselator.getBuilder();
         Matrix4f matrix = graphics.pose().last().pose();
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.setShaderTexture(0, backgroundLocation);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        buffer.addVertex(matrix, this.left, y2, 0.0F).setUv(0, ((float) y2 / 32.0F)).setColor(64, 64, 64, alpha2);
-        buffer.addVertex(matrix, this.left + this.width, y2, 0.0F).setUv(((float) this.width / 32.0F), ((float) y2 / 32.0F)).setColor(64, 64, 64, alpha2);
-        buffer.addVertex(matrix, this.left + this.width, y1, 0.0F).setUv(((float) this.width / 32.0F), ((float) y1 / 32.0F)).setColor(64, 64, 64, alpha1);
-        buffer.addVertex(matrix, this.left, y1, 0.0F).setUv(0, ((float) y1 / 32.0F)).setColor(64, 64, 64, alpha1);
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        buffer.vertex(matrix, this.left, y2, 0.0F).uv(0, ((float) y2 / 32.0F)).color(64, 64, 64, alpha2).endVertex();
+        buffer.vertex(matrix, this.left + this.width, y2, 0.0F).uv(((float) this.width / 32.0F), ((float) y2 / 32.0F)).color(64, 64, 64, alpha2).endVertex();
+        buffer.vertex(matrix, this.left + this.width, y1, 0.0F).uv(((float) this.width / 32.0F), ((float) y1 / 32.0F)).color(64, 64, 64, alpha1).endVertex();
+        buffer.vertex(matrix, this.left, y1, 0.0F).uv(0, ((float) y1 / 32.0F)).color(64, 64, 64, alpha1).endVertex();
+        tesselator.end();
     }
     
     protected E remove(int index) {

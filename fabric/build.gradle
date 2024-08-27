@@ -38,15 +38,6 @@ dependencies {
     modApi fabricApi.module("fabric-screen-api-v1", rootProject.fabric_api_version)
     modApi fabricApi.module("fabric-key-binding-api-v1", rootProject.fabric_api_version)
     modApi fabricApi.module("fabric-lifecycle-events-v1", rootProject.fabric_api_version)
-
-    /*implementation("blue.endless:jankson:${rootProject.jankson_version}")
-    implementation("com.moandjiezana.toml:toml4j:${rootProject.toml4j_version}")
-    implementation("org.yaml:snakeyaml:${rootProject.snakeyaml_version}")
-    shadowCommon("blue.endless:jankson:${rootProject.jankson_version}")
-    shadowCommon("com.moandjiezana.toml:toml4j:${rootProject.toml4j_version}") {
-        exclude(module: "gson")
-    }
-    shadowCommon("org.yaml:snakeyaml:${rootProject.snakeyaml_version}")*/
     
     implementation("com.electronwill.night-config:core:${project.night_config_version}")
     implementation("com.electronwill.night-config:toml:${project.night_config_version}")
@@ -72,10 +63,6 @@ processResources {
 }
 
 shadowJar {
-    /*relocate "blue.endless.jankson", "${rootProject.maven_group}.dawnconfig.shadowed.blue.endless.jankson"
-    relocate "com.moandjiezana.toml", "${rootProject.maven_group}.dawnconfig.shadowed.com.moandjiezana.toml"
-    relocate "org.yaml.snakeyaml", "${rootProject.maven_group}.dawnconfig.shadowed.org.yaml.snakeyaml"*/
-    
     relocate "com.electronwill.nightconfig.core", "${rootProject.maven_group}.shadowed.com.electronwill.nightconfig.core"
     relocate "com.electronwill.nightconfig.toml", "${rootProject.maven_group}.shadowed.com.electronwill.nightconfig.toml"
     

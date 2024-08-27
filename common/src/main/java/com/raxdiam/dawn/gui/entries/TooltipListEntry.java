@@ -24,6 +24,7 @@ import com.raxdiam.dawn.api.Tooltip;
 import com.raxdiam.dawn.math.Point;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;

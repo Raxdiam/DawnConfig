@@ -32,6 +32,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.ConfirmScreen;
@@ -54,7 +55,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 public abstract class AbstractConfigScreen extends Screen implements ConfigScreen {
-    protected static final ResourceLocation CONFIG_TEX = ResourceLocation.fromNamespaceAndPath("dawn-config", "textures/gui/dawn_config.png");
+    protected static final ResourceLocation CONFIG_TEX = new ResourceLocation("dawn-config", "textures/gui/dawn_config.png");
     private final ResourceLocation backgroundLocation;
     protected boolean confirmSave;
     protected final Screen parent;
@@ -137,7 +138,7 @@ public abstract class AbstractConfigScreen extends Screen implements ConfigScree
     }
     
     public boolean isTransparentBackground() {
-        return transparentBackground;
+        return transparentBackground && Minecraft.getInstance().level != null;
     }
     
     @ApiStatus.Internal
@@ -342,6 +343,8 @@ public abstract class AbstractConfigScreen extends Screen implements ConfigScree
         boolean edited = isEdited();
         Optional.ofNullable(getQuitButton()).ifPresent(button -> button.setMessage(edited ? Component.translatable("text.dawn-config.cancel_discard") : Component.translatable("gui.cancel")));
         for (GuiEventListener child : children()) {
+            if (child instanceof EditBox box)
+                box.tick();
             if (child instanceof TickableWidget widget)
                 widget.tick();
         }
@@ -378,14 +381,16 @@ public abstract class AbstractConfigScreen extends Screen implements ConfigScree
         if (isTransparentBackground())
             return;
         Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = tesselator.getBuilder();
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.setShaderTexture(0, getBackgroundLocation());
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        buffer.addVertex(matrix, rect.getMinX(), rect.getMaxY(), 0.0F).setUv(rect.getMinX() / 32.0F, rect.getMaxY() / 32.0F).setColor(red, green, blue, endAlpha);
-        buffer.addVertex(matrix, rect.getMaxX(), rect.getMaxY(), 0.0F).setUv(rect.getMaxX() / 32.0F, rect.getMaxY() / 32.0F).setColor(red, green, blue, endAlpha);
-        buffer.addVertex(matrix, rect.getMaxX(), rect.getMinY(), 0.0F).setUv(rect.getMaxX() / 32.0F, rect.getMinY() / 32.0F).setColor(red, green, blue, startAlpha);
-        buffer.addVertex(matrix, rect.getMinX(), rect.getMinY(), 0.0F).setUv(rect.getMinX() / 32.0F, rect.getMinY() / 32.0F).setColor(red, green, blue, startAlpha);
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        buffer.vertex(matrix, rect.getMinX(), rect.getMaxY(), 0.0F).uv(rect.getMinX() / 32.0F, rect.getMaxY() / 32.0F).color(red, green, blue, endAlpha).endVertex();
+        buffer.vertex(matrix, rect.getMaxX(), rect.getMaxY(), 0.0F).uv(rect.getMaxX() / 32.0F, rect.getMaxY() / 32.0F).color(red, green, blue, endAlpha).endVertex();
+        buffer.vertex(matrix, rect.getMaxX(), rect.getMinY(), 0.0F).uv(rect.getMaxX() / 32.0F, rect.getMinY() / 32.0F).color(red, green, blue, startAlpha).endVertex();
+        buffer.vertex(matrix, rect.getMinX(), rect.getMinY(), 0.0F).uv(rect.getMinX() / 32.0F, rect.getMinY() / 32.0F).color(red, green, blue, startAlpha).endVertex();
+        tesselator.end();
     }
     
     @Override

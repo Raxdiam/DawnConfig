@@ -30,7 +30,6 @@ import com.raxdiam.dawn.DawnConfigInitializer;
 import com.raxdiam.dawn.api.*;
 import com.raxdiam.dawn.api.scroll.ScrollingContainer;
 import com.raxdiam.dawn.gui.entries.EmptyEntry;
-import com.raxdiam.dawn.gui.widget.DynamicEntryListWidget;
 import com.raxdiam.dawn.gui.widget.SearchFieldEntry;
 import com.raxdiam.dawn.math.Rectangle;
 import net.minecraft.ChatFormatting;
@@ -163,7 +162,7 @@ public class GlobalizedDawnConfigScreen extends AbstractConfigScreen implements 
         addRenderableWidget(cancelButton = Button.builder(isEdited() ? Component.translatable("text.dawn-config.cancel_discard") : Component.translatable("gui.cancel"), widget -> quit()).bounds(0, height - 26, buttonWidths, 20).build());
         addRenderableWidget(exitButton = new Button(0, height - 26, buttonWidths, 20, Component.empty(), button -> saveAll(true), Supplier::get) {
             @Override
-            public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+            public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
                 boolean hasErrors = false;
                 label:
                 for (List<AbstractConfigEntry<?>> entries : categorizedEntries.values()) {
@@ -176,7 +175,7 @@ public class GlobalizedDawnConfigScreen extends AbstractConfigScreen implements 
                 }
                 active = isEdited() && !hasErrors;
                 setMessage(hasErrors ? Component.translatable("text.dawn-config.error_cannot_save") : Component.translatable("text.dawn-config.save_and_done"));
-                super.renderWidget(graphics, mouseX, mouseY, delta);
+                super.render(graphics, mouseX, mouseY, delta);
             }
         });
         Optional.ofNullable(this.afterInitConsumer).ifPresent(consumer -> consumer.accept(this));
@@ -204,6 +203,7 @@ public class GlobalizedDawnConfigScreen extends AbstractConfigScreen implements 
         }
     }
     
+    @SuppressWarnings("deprecation")
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         this.lastHoveredReference = null;
@@ -213,17 +213,12 @@ public class GlobalizedDawnConfigScreen extends AbstractConfigScreen implements 
             requestingReferenceRebuilding = false;
         }
         int sliderPosition = getSideSliderPosition();
-        if (!isTransparentBackground()) {
-            ScissorsHandler.INSTANCE.scissor(new Rectangle(sliderPosition, 0, width - sliderPosition, height));
-            renderMenuBackground(graphics);
-            overlayBackground(graphics, new Rectangle(14, 0, width, height), 64, 64, 64, 255, 255);
+        ScissorsHandler.INSTANCE.scissor(new Rectangle(sliderPosition, 0, width - sliderPosition, height));
+        if (isTransparentBackground()) {
+            graphics.fillGradient(14, 0, width, height, -1072689136, -804253680);
         } else {
-            if (this.minecraft.level == null) {
-                this.renderPanorama(graphics, delta);
-            }
-            renderBlurredBackground(delta);
-            renderMenuBackground(graphics);
-            ScissorsHandler.INSTANCE.scissor(new Rectangle(sliderPosition, 0, width - sliderPosition, height));
+            renderDirtBackground(graphics);
+            overlayBackground(graphics, new Rectangle(14, 0, width, height), 64, 64, 64, 255, 255);
         }
         listWidget.width = width - sliderPosition;
         listWidget.setLeftPos(sliderPosition);
@@ -240,55 +235,56 @@ public class GlobalizedDawnConfigScreen extends AbstractConfigScreen implements 
         sideSlider.updatePosition(delta);
         sideScroller.updatePosition(delta);
         if (isTransparentBackground()) {
-            RenderSystem.enableBlend();
-            graphics.blit(ResourceLocation.withDefaultNamespace("textures/gui/menu_list_background.png"), 0, 0, sliderPosition, height, sliderPosition, height, 32, 32);
-            graphics.blit(ResourceLocation.withDefaultNamespace("textures/gui/menu_list_background.png"), 0, 0, sliderPosition - 14, height, sliderPosition - 14, height, 32, 32);
-            graphics.blit(DynamicEntryListWidget.VERTICAL_HEADER_SEPARATOR, sliderPosition - 1, 0, 0.0F, 0.0F, 1, this.height, 2, 32);
-            if (sliderPosition - 14 - 1 > 0) {
-                graphics.blit(DynamicEntryListWidget.VERTICAL_HEADER_SEPARATOR, sliderPosition - 14 - 1, 0, 0.0F, 0.0F, 1, this.height, 2, 32);
-            }
-            RenderSystem.disableBlend();
+            graphics.fillGradient(0, 0, sliderPosition, height, -1240461296, -972025840);
+            graphics.fillGradient(0, 0, sliderPosition - 14, height, 1744830464, 1744830464);
         } else {
             Tesselator tesselator = Tesselator.getInstance();
-            BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            BufferBuilder buffer = tesselator.getBuilder();
             RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
             RenderSystem.setShaderTexture(0, getBackgroundLocation());
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             float f = 32.0F;
-            buffer.addVertex(sliderPosition - 14, height, 0.0F).setUv(0, height / 32.0F).setColor(68, 68, 68, 255);
-            buffer.addVertex(sliderPosition, height, 0.0F).setUv(14 / 32.0F, height / 32.0F).setColor(68, 68, 68, 255);
-            buffer.addVertex(sliderPosition, 0, 0.0F).setUv(14 / 32.0F, 0).setColor(68, 68, 68, 255);
-            buffer.addVertex(sliderPosition - 14, 0, 0.0F).setUv(0, 0).setColor(68, 68, 68, 255);
+            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            buffer.vertex(sliderPosition - 14, height, 0.0D).uv(0, height / 32.0F).color(68, 68, 68, 255).endVertex();
+            buffer.vertex(sliderPosition, height, 0.0D).uv(14 / 32.0F, height / 32.0F).color(68, 68, 68, 255).endVertex();
+            buffer.vertex(sliderPosition, 0, 0.0D).uv(14 / 32.0F, 0).color(68, 68, 68, 255).endVertex();
+            buffer.vertex(sliderPosition - 14, 0, 0.0D).uv(0, 0).color(68, 68, 68, 255).endVertex();
             
-            buffer.addVertex(0, height, 0.0F).setUv(0, (height + sideScroller.scrollAmountInt()) / 32.0F).setColor(32, 32, 32, 255);
-            buffer.addVertex(sliderPosition - 14, height, 0.0F).setUv((sliderPosition - 14) / 32.0F, (height + sideScroller.scrollAmountInt()) / 32.0F).setColor(32, 32, 32, 255);
-            buffer.addVertex(sliderPosition - 14, 0, 0.0F).setUv((sliderPosition - 14) / 32.0F, sideScroller.scrollAmountInt() / 32.0F).setColor(32, 32, 32, 255);
-            buffer.addVertex(0, 0, 0.0F).setUv(0, sideScroller.scrollAmountInt() / 32.0F).setColor(32, 32, 32, 255);
-            
+            buffer.vertex(0, height, 0.0D).uv(0, (height + sideScroller.scrollAmountInt()) / 32.0F).color(32, 32, 32, 255).endVertex();
+            buffer.vertex(sliderPosition - 14, height, 0.0D).uv((sliderPosition - 14) / 32.0F, (height + sideScroller.scrollAmountInt()) / 32.0F).color(32, 32, 32, 255).endVertex();
+            buffer.vertex(sliderPosition - 14, 0, 0.0D).uv((sliderPosition - 14) / 32.0F, sideScroller.scrollAmountInt() / 32.0F).color(32, 32, 32, 255).endVertex();
+            buffer.vertex(0, 0, 0.0D).uv(0, sideScroller.scrollAmountInt() / 32.0F).color(32, 32, 32, 255).endVertex();
+            tesselator.end();
+        }
+        {
             Matrix4f matrix = graphics.pose().last().pose();
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            Tesselator tesselator = Tesselator.getInstance();
+            BufferBuilder buffer = tesselator.getBuilder();
             int shadeColor = isTransparentBackground() ? 120 : 160;
-            buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-            buffer.addVertex(matrix, sliderPosition + 4, 0, 100.0F).setColor(0, 0, 0, 0);
-            buffer.addVertex(matrix, sliderPosition, 0, 100.0F).setColor(0, 0, 0, shadeColor);
-            buffer.addVertex(matrix, sliderPosition, height, 100.0F).setColor(0, 0, 0, shadeColor);
-            buffer.addVertex(matrix, sliderPosition + 4, height, 100.0F).setColor(0, 0, 0, 0);
+            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            buffer.vertex(matrix, sliderPosition + 4, 0, 100.0F).color(0, 0, 0, 0).endVertex();
+            buffer.vertex(matrix, sliderPosition, 0, 100.0F).color(0, 0, 0, shadeColor).endVertex();
+            buffer.vertex(matrix, sliderPosition, height, 100.0F).color(0, 0, 0, shadeColor).endVertex();
+            buffer.vertex(matrix, sliderPosition + 4, height, 100.0F).color(0, 0, 0, 0).endVertex();
+            tesselator.end();
             shadeColor /= 2;
-            buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-            buffer.addVertex(matrix, sliderPosition - 14, 0, 100.0F).setColor(0, 0, 0, shadeColor);
-            buffer.addVertex(matrix, sliderPosition - 14 - 4, 0, 100.0F).setColor(0, 0, 0, 0);
-            buffer.addVertex(matrix, sliderPosition - 14 - 4, height, 100.0F).setColor(0, 0, 0, 0);
-            buffer.addVertex(matrix, sliderPosition - 14, height, 100.0F).setColor(0, 0, 0, shadeColor);
+            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            buffer.vertex(matrix, sliderPosition - 14, 0, 100.0F).color(0, 0, 0, shadeColor).endVertex();
+            buffer.vertex(matrix, sliderPosition - 14 - 4, 0, 100.0F).color(0, 0, 0, 0).endVertex();
+            buffer.vertex(matrix, sliderPosition - 14 - 4, height, 100.0F).color(0, 0, 0, 0).endVertex();
+            buffer.vertex(matrix, sliderPosition - 14, height, 100.0F).color(0, 0, 0, shadeColor).endVertex();
+            tesselator.end();
             RenderSystem.disableBlend();
         }
         Rectangle slideArrowBounds = new Rectangle(sliderPosition - 14, 0, 14, height);
         {
-            MultiBufferSource.BufferSource immediate = graphics.bufferSource();
+            MultiBufferSource.BufferSource immediate = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
             font.renderText(">", sliderPosition - 7 - font.width(">") / 2f, height / 2, (slideArrowBounds.contains(mouseX, mouseY) ? 16777120 : 16777215) | Mth.clamp(Mth.ceil((1 - sideSlider.scrollAmount()) * 255.0F), 0, 255) << 24, false, graphics.pose().last().pose(), immediate, Font.DisplayMode.NORMAL, 0, 15728880);
             font.renderText("<", sliderPosition - 7 - font.width("<") / 2f, height / 2, (slideArrowBounds.contains(mouseX, mouseY) ? 16777120 : 16777215) | Mth.clamp(Mth.ceil(sideSlider.scrollAmount() * 255.0F), 0, 255) << 24, false, graphics.pose().last().pose(), immediate, Font.DisplayMode.NORMAL, 0, 15728880);
-            graphics.flush();
+            immediate.endBatch();
             
             Rectangle scrollerBounds = sideScroller.getBounds();
             if (!scrollerBounds.isEmpty()) {
@@ -308,10 +304,6 @@ public class GlobalizedDawnConfigScreen extends AbstractConfigScreen implements 
                 sideScroller.renderScrollBar(graphics);
             }
         }
-    }
-    
-    @Override
-    public void renderBackground(GuiGraphics guiGraphics, int i, int j, float f) {
     }
     
     @Override
@@ -342,13 +334,13 @@ public class GlobalizedDawnConfigScreen extends AbstractConfigScreen implements 
     }
     
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amountX, double amountY) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         Rectangle slideBounds = new Rectangle(0, 0, getSideSliderPosition() - 14, height);
-        if (amountY != 0 && slideBounds.contains(mouseX, mouseY)) {
-            sideScroller.offset(DawnConfigInitializer.getScrollStep() * -amountY, true);
+        if (slideBounds.contains(mouseX, mouseY)) {
+            sideScroller.offset(DawnConfigInitializer.getScrollStep() * -amount, true);
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, amountX, amountY);
+        return super.mouseScrolled(mouseX, mouseY, amount);
     }
     
     private int getSideSliderPosition() {
@@ -377,7 +369,6 @@ public class GlobalizedDawnConfigScreen extends AbstractConfigScreen implements 
         public ComponentPath nextFocusPath(FocusNavigationEvent focusNavigationEvent) {
             return null;
         }
-        
         @Override
         public Object getValue() {
             return null;

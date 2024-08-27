@@ -46,7 +46,7 @@ import java.util.*;
 @Environment(EnvType.CLIENT)
 public class SubCategoryListEntry extends TooltipListEntry<List<AbstractConfigListEntry>> implements Expandable {
     
-    private static final ResourceLocation CONFIG_TEX = ResourceLocation.fromNamespaceAndPath("dawn-config", "textures/gui/dawn_config.png");
+    private static final ResourceLocation CONFIG_TEX = new ResourceLocation("dawn-config", "textures/gui/dawn_config.png");
     private final List<AbstractConfigListEntry> entries;
     private final CategoryLabelWidget widget;
     private final List<Object> children; // GuiEventListener & NarratableEntry

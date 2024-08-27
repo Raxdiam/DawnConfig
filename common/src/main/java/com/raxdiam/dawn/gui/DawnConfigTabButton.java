@@ -61,9 +61,9 @@ public class DawnConfigTabButton extends AbstractButton {
     }
     
     @Override
-    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         active = index != screen.selectedCategoryIndex;
-        super.renderWidget(graphics, mouseX, mouseY, delta);
+        super.render(graphics, mouseX, mouseY, delta);
         
         if (isMouseOver(mouseX, mouseY)) {
             Optional<FormattedText[]> tooltip = getDescription();

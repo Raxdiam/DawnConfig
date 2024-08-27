@@ -18,15 +18,6 @@ dependencies {
     // Do NOT use other classes from fabric loader
     modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
 
-    /*compileOnly("blue.endless:jankson:${rootProject.jankson_version}")
-    compileOnly("com.moandjiezana.toml:toml4j:${rootProject.toml4j_version}")
-    compileOnly("org.yaml:snakeyaml:${rootProject.snakeyaml_version}")
-    shadowCommon("blue.endless:jankson:${rootProject.jankson_version}")
-    shadowCommon("com.moandjiezana.toml:toml4j:${rootProject.toml4j_version}") {
-        exclude(module: "gson")
-    }
-    shadowCommon("org.yaml:snakeyaml:${rootProject.snakeyaml_version}")*/
-    
     compileOnly("com.electronwill.night-config:core:${project.night_config_version}")
     compileOnly("com.electronwill.night-config:toml:${project.night_config_version}")
     shadowCommon("com.electronwill.night-config:core:${project.night_config_version}")
@@ -34,7 +25,7 @@ dependencies {
 }
 
 architectury {
-    common("fabric", "neoforge")
+    common("fabric")
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -43,10 +34,6 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 }
 
 shadowJar {
-    /*relocate "blue.endless.jankson", "${rootProject.maven_group}.dawnconfig.shadowed.blue.endless.jankson"
-    relocate "com.moandjiezana.toml", "${rootProject.maven_group}.dawnconfig.shadowed.com.moandjiezana.toml"
-    relocate "org.yaml.snakeyaml", "${rootProject.maven_group}.dawnconfig.shadowed.org.yaml.snakeyaml"*/
-    
     relocate "com.electronwill.nightconfig.core", "${rootProject.maven_group}.shadowed.com.electronwill.nightconfig.core"
     relocate "com.electronwill.nightconfig.toml", "${rootProject.maven_group}.shadowed.com.electronwill.nightconfig.toml"
 

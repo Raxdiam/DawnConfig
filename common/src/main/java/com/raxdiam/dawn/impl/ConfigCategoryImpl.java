@@ -68,6 +68,8 @@ public class ConfigCategoryImpl implements ConfigCategory {
     
     @Override
     public ConfigCategory setCategoryBackground(ResourceLocation identifier) {
+        if (builder.hasTransparentBackground())
+            throw new IllegalStateException("Cannot set category background if screen is using transparent background.");
         background = identifier;
         return this;
     }

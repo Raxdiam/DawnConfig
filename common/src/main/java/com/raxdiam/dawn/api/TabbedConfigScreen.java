@@ -25,7 +25,5 @@ import net.minecraft.resources.ResourceLocation;
 public interface TabbedConfigScreen extends ConfigScreen {
     void registerCategoryBackground(String text, ResourceLocation identifier);
     
-    void registerCategoryTransparency(String text, boolean transparent);
-    
     Component getSelectedCategory();
 }

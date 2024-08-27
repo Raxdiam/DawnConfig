@@ -167,8 +167,8 @@ public class DropdownBoxEntry<T> extends TooltipListEntry<T> {
     }
     
     @Override
-    public boolean mouseScrolled(double double_1, double double_2, double amountX, double amountY) {
-        return selectionElement.mouseScrolled(double_1, double_2, amountX, amountY);
+    public boolean mouseScrolled(double double_1, double double_2, double double_3) {
+        return selectionElement.mouseScrolled(double_1, double_2, double_3);
     }
     
     public static class SelectionElement<R> extends AbstractContainerEventHandler implements Renderable {
@@ -205,9 +205,9 @@ public class DropdownBoxEntry<T> extends TooltipListEntry<T> {
         }
         
         @Override
-        public boolean mouseScrolled(double double_1, double double_2, double amountX, double amountY) {
+        public boolean mouseScrolled(double double_1, double double_2, double double_3) {
             if (menu.isExpanded())
-                return menu.mouseScrolled(double_1, double_2, amountX, amountY);
+                return menu.mouseScrolled(double_1, double_2, double_3);
             return false;
         }
         
@@ -417,10 +417,9 @@ public class DropdownBoxEntry<T> extends TooltipListEntry<T> {
             ScissorsHandler.INSTANCE.scissor(new Rectangle(lastRectangle.x, lastRectangle.y + lastRectangle.height + 1, cWidth - 6, last10Height - 1));
             double yy = lastRectangle.y + lastRectangle.height - scroll;
             for (SelectionCellElement<R> cell : currentElements) {
-                if (yy + getCellCreator().getCellHeight() >= lastRectangle.y + lastRectangle.height && yy <= lastRectangle.y + lastRectangle.height + last10Height + 1) {
-                    graphics.fill(lastRectangle.x + 1, (int) yy, lastRectangle.x + getCellCreator().getCellWidth(), (int) yy + getCellCreator().getCellHeight(), 0xFF000000);
+                if (yy + getCellCreator().getCellHeight() >= lastRectangle.y + lastRectangle.height && yy <= lastRectangle.y + lastRectangle.height + last10Height + 1)
                     cell.render(graphics, mouseX, mouseY, lastRectangle.x, (int) yy, getMaxScrollPosition() > 6 ? getCellCreator().getCellWidth() - 6 : getCellCreator().getCellWidth(), getCellCreator().getCellHeight(), delta);
-                } else
+                else
                     cell.dontRender(graphics, delta);
                 yy += getCellCreator().getCellHeight();
             }
@@ -446,19 +445,21 @@ public class DropdownBoxEntry<T> extends TooltipListEntry<T> {
                 int topc = new Rectangle(scrollbarPositionMinX, minY, scrollbarPositionMaxX - scrollbarPositionMinX, height).contains(PointHelper.ofMouse()) ? 222 : 172;
                 
                 Tesselator tesselator = Tesselator.getInstance();
-                BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+                BufferBuilder buffer = tesselator.getBuilder();
                 
                 // Bottom
-                buffer.addVertex(scrollbarPositionMinX, minY + height, 0.0F).setColor(bottomc, bottomc, bottomc, 255);
-                buffer.addVertex(scrollbarPositionMaxX, minY + height, 0.0F).setColor(bottomc, bottomc, bottomc, 255);
-                buffer.addVertex(scrollbarPositionMaxX, minY, 0.0F).setColor(bottomc, bottomc, bottomc, 255);
-                buffer.addVertex(scrollbarPositionMinX, minY, 0.0F).setColor(bottomc, bottomc, bottomc, 255);
+                buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+                buffer.vertex(scrollbarPositionMinX, minY + height, 0.0D).color(bottomc, bottomc, bottomc, 255).endVertex();
+                buffer.vertex(scrollbarPositionMaxX, minY + height, 0.0D).color(bottomc, bottomc, bottomc, 255).endVertex();
+                buffer.vertex(scrollbarPositionMaxX, minY, 0.0D).color(bottomc, bottomc, bottomc, 255).endVertex();
+                buffer.vertex(scrollbarPositionMinX, minY, 0.0D).color(bottomc, bottomc, bottomc, 255).endVertex();
                 
                 // Top
-                buffer.addVertex(scrollbarPositionMinX, (minY + height - 1), 0.0F).setColor(topc, topc, topc, 255);
-                buffer.addVertex((scrollbarPositionMaxX - 1), (minY + height - 1), 0.0F).setColor(topc, topc, topc, 255);
-                buffer.addVertex((scrollbarPositionMaxX - 1), minY, 0.0F).setColor(topc, topc, topc, 255);
-                buffer.addVertex(scrollbarPositionMinX, minY, 0.0F).setColor(topc, topc, topc, 255);
+                buffer.vertex(scrollbarPositionMinX, (minY + height - 1), 0.0D).color(topc, topc, topc, 255).endVertex();
+                buffer.vertex((scrollbarPositionMaxX - 1), (minY + height - 1), 0.0D).color(topc, topc, topc, 255).endVertex();
+                buffer.vertex((scrollbarPositionMaxX - 1), minY, 0.0D).color(topc, topc, topc, 255).endVertex();
+                buffer.vertex(scrollbarPositionMinX, minY, 0.0D).color(topc, topc, topc, 255).endVertex();
+                tesselator.end();
             }
             graphics.pose().popPose();
         }
@@ -496,9 +497,9 @@ public class DropdownBoxEntry<T> extends TooltipListEntry<T> {
         }
         
         @Override
-        public boolean mouseScrolled(double mouseX, double mouseY, double amountX, double amountY) {
-            if (isMouseOver(mouseX, mouseY) && amountY != 0) {
-                offset(DawnConfigInitializer.getScrollStep() * -amountY, true);
+        public boolean mouseScrolled(double mouseX, double mouseY, double double_3) {
+            if (isMouseOver(mouseX, mouseY)) {
+                offset(DawnConfigInitializer.getScrollStep() * -double_3, true);
                 return true;
             }
             return false;
@@ -728,9 +729,9 @@ public class DropdownBoxEntry<T> extends TooltipListEntry<T> {
             this.toTextFunction = Objects.requireNonNull(toTextFunction);
             textFieldWidget = new EditBox(Minecraft.getInstance().font, 0, 0, 148, 18, Component.empty()) {
                 @Override
-                public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+                public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
                     setFocused(isSuggestionMode() && isSelected && DefaultSelectionTopCellElement.this.getParent().getFocused() == DefaultSelectionTopCellElement.this.getParent().selectionElement && DefaultSelectionTopCellElement.this.getParent().selectionElement.getFocused() == DefaultSelectionTopCellElement.this && DefaultSelectionTopCellElement.this.getFocused() == this);
-                    super.renderWidget(graphics, mouseX, mouseY, delta);
+                    super.render(graphics, mouseX, mouseY, delta);
                 }
                 
                 @Override
@@ -777,7 +778,7 @@ public class DropdownBoxEntry<T> extends TooltipListEntry<T> {
         @Override
         public void setValue(R value) {
             textFieldWidget.setValue(toTextFunction.apply(value).getString());
-            textFieldWidget.moveCursorTo(0, false);
+            textFieldWidget.moveCursorTo(0);
         }
         
         @Override

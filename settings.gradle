@@ -8,12 +8,11 @@ pluginManagement {
     }
 }
 
-if (JavaVersion.current().ordinal() + 1 < 21) {
-    throw new IllegalStateException("Please run gradle with Java 21+!")
+if (JavaVersion.current().ordinal() + 1 < 17) {
+    throw new IllegalStateException("Please run gradle with Java 17+!")
 }
 
 include("common")
 include("fabric")
-include("neoforge")
 
 rootProject.name = 'dawn-config'

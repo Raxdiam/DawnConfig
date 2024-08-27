@@ -99,7 +99,6 @@ public class DawnConfigScreen extends AbstractTabbedConfigScreen {
             categorizedEntries.put(category.getCategoryKey(), entries);
             if (category.getBackground() != null) {
                 registerCategoryBackground(category.getCategoryKey().getString(), category.getBackground());
-                registerCategoryTransparency(category.getCategoryKey().getString(), false);
             }
         });
         
@@ -133,7 +132,7 @@ public class DawnConfigScreen extends AbstractTabbedConfigScreen {
         addRenderableWidget(Button.builder(isEdited() ? Component.translatable("text.dawn-config.cancel_discard") : Component.translatable("gui.cancel"), widget -> quit()).bounds(width / 2 - buttonWidths - 3, height - 26, buttonWidths, 20).build());
         addRenderableWidget(new Button(width / 2 + 3, height - 26, buttonWidths, 20, Component.empty(), button -> saveAll(true), Supplier::get) {
             @Override
-            public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+            public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
                 boolean hasErrors = false;
                 for (List<AbstractConfigEntry<?>> entries : Lists.newArrayList(categorizedEntries.values())) {
                     for (AbstractConfigEntry<?> entry : entries)
@@ -146,7 +145,7 @@ public class DawnConfigScreen extends AbstractTabbedConfigScreen {
                 }
                 active = isEdited() && !hasErrors;
                 setMessage(hasErrors ? Component.translatable("text.dawn-config.error_cannot_save") : Component.translatable("text.dawn-config.save_and_done"));
-                super.renderWidget(graphics, mouseX, mouseY, delta);
+                super.render(graphics, mouseX, mouseY, delta);
             }
         });
         if (isShowingTabs()) {
@@ -195,12 +194,12 @@ public class DawnConfigScreen extends AbstractTabbedConfigScreen {
     }
     
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amountX, double amountY) {
-        if (tabsBounds.contains(mouseX, mouseY) && !tabsLeftBounds.contains(mouseX, mouseY) && !tabsRightBounds.contains(mouseX, mouseY) && amountY != 0d) {
-            tabsScroller.offset(-amountY * 16, true);
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        if (tabsBounds.contains(mouseX, mouseY) && !tabsLeftBounds.contains(mouseX, mouseY) && !tabsRightBounds.contains(mouseX, mouseY) && amount != 0d) {
+            tabsScroller.offset(-amount * 16, true);
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, amountX, amountY);
+        return super.mouseScrolled(mouseX, mouseY, amount);
     }
     
     public double getTabsMaximumScrolled() {
@@ -228,14 +227,10 @@ public class DawnConfigScreen extends AbstractTabbedConfigScreen {
             buttonLeftTab.active = tabsScroller.scrollAmount > 0d;
             buttonRightTab.active = tabsScroller.scrollAmount < getTabsMaximumScrolled() - width + 40;
         }
-        if (!isTransparentBackground()) {
-            renderMenuBackground(graphics);
+        if (isTransparentBackground()) {
+            graphics.fillGradient(0, 0, this.width, this.height, -1072689136, -804253680);
         } else {
-            if (this.minecraft.level == null) {
-                this.renderPanorama(graphics, delta);
-            }
-            renderBlurredBackground(delta);
-            renderMenuBackground(graphics);
+            renderDirtBackground(graphics);
         }
         listWidget.render(graphics, mouseX, mouseY, delta);
         ScissorsHandler.INSTANCE.scissor(new Rectangle(listWidget.left, listWidget.top, listWidget.width, listWidget.bottom - listWidget.top));
@@ -296,10 +291,6 @@ public class DawnConfigScreen extends AbstractTabbedConfigScreen {
         super.render(graphics, mouseX, mouseY, delta);
     }
     
-    @Override
-    public void renderBackground(GuiGraphics guiGraphics, int i, int j, float f) {
-    }
-    
     private void drawTabsShades(GuiGraphics graphics, int lightColor, int darkColor) {
         drawTabsShades(graphics.pose(), lightColor, darkColor);
     }
@@ -313,15 +304,17 @@ public class DawnConfigScreen extends AbstractTabbedConfigScreen {
         RenderSystem.blendFuncSeparate(770, 771, 0, 1);
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        buffer.addVertex(matrix, tabsBounds.getMinX() + 20, tabsBounds.getMinY() + 4, 0.0F).setUv(0, 1f).setColor(0, 0, 0, lightColor);
-        buffer.addVertex(matrix, tabsBounds.getMaxX() - 20, tabsBounds.getMinY() + 4, 0.0F).setUv(1f, 1f).setColor(0, 0, 0, lightColor);
-        buffer.addVertex(matrix, tabsBounds.getMaxX() - 20, tabsBounds.getMinY(), 0.0F).setUv(1f, 0).setColor(0, 0, 0, darkColor);
-        buffer.addVertex(matrix, tabsBounds.getMinX() + 20, tabsBounds.getMinY(), 0.0F).setUv(0, 0).setColor(0, 0, 0, darkColor);
-        buffer.addVertex(matrix, tabsBounds.getMinX() + 20, tabsBounds.getMaxY(), 0.0F).setUv(0, 1f).setColor(0, 0, 0, darkColor);
-        buffer.addVertex(matrix, tabsBounds.getMaxX() - 20, tabsBounds.getMaxY(), 0.0F).setUv(1f, 1f).setColor(0, 0, 0, darkColor);
-        buffer.addVertex(matrix, tabsBounds.getMaxX() - 20, tabsBounds.getMaxY() - 4, 0.0F).setUv(1f, 0).setColor(0, 0, 0, lightColor);
-        buffer.addVertex(matrix, tabsBounds.getMinX() + 20, tabsBounds.getMaxY() - 4, 0.0F).setUv(0, 0).setColor(0, 0, 0, lightColor);
+        BufferBuilder buffer = tesselator.getBuilder();
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        buffer.vertex(matrix, tabsBounds.getMinX() + 20, tabsBounds.getMinY() + 4, 0.0F).uv(0, 1f).color(0, 0, 0, lightColor).endVertex();
+        buffer.vertex(matrix, tabsBounds.getMaxX() - 20, tabsBounds.getMinY() + 4, 0.0F).uv(1f, 1f).color(0, 0, 0, lightColor).endVertex();
+        buffer.vertex(matrix, tabsBounds.getMaxX() - 20, tabsBounds.getMinY(), 0.0F).uv(1f, 0).color(0, 0, 0, darkColor).endVertex();
+        buffer.vertex(matrix, tabsBounds.getMinX() + 20, tabsBounds.getMinY(), 0.0F).uv(0, 0).color(0, 0, 0, darkColor).endVertex();
+        buffer.vertex(matrix, tabsBounds.getMinX() + 20, tabsBounds.getMaxY(), 0.0F).uv(0, 1f).color(0, 0, 0, darkColor).endVertex();
+        buffer.vertex(matrix, tabsBounds.getMaxX() - 20, tabsBounds.getMaxY(), 0.0F).uv(1f, 1f).color(0, 0, 0, darkColor).endVertex();
+        buffer.vertex(matrix, tabsBounds.getMaxX() - 20, tabsBounds.getMaxY() - 4, 0.0F).uv(1f, 0).color(0, 0, 0, lightColor).endVertex();
+        buffer.vertex(matrix, tabsBounds.getMinX() + 20, tabsBounds.getMaxY() - 4, 0.0F).uv(0, 0).color(0, 0, 0, lightColor).endVertex();
+        tesselator.end();
         RenderSystem.disableBlend();
     }
     
@@ -395,10 +388,10 @@ public class DawnConfigScreen extends AbstractTabbedConfigScreen {
             float n = (float) (k >> 16 & 255) / 255.0F;
             float o = (float) (k >> 8 & 255) / 255.0F;
             float p = (float) (k & 255) / 255.0F;
-            bufferBuilder.addVertex(matrix4f, (float) xEnd, (float) yStart, (float) i).setColor(g, h, l, f);
-            bufferBuilder.addVertex(matrix4f, (float) xStart, (float) yStart, (float) i).setColor(g, h, l, f);
-            bufferBuilder.addVertex(matrix4f, (float) xStart, (float) yEnd, (float) i).setColor(n, o, p, m);
-            bufferBuilder.addVertex(matrix4f, (float) xEnd, (float) yEnd, (float) i).setColor(n, o, p, m);
+            bufferBuilder.vertex(matrix4f, (float) xEnd, (float) yStart, (float) i).color(g, h, l, f).endVertex();
+            bufferBuilder.vertex(matrix4f, (float) xStart, (float) yStart, (float) i).color(g, h, l, f).endVertex();
+            bufferBuilder.vertex(matrix4f, (float) xStart, (float) yEnd, (float) i).color(n, o, p, m).endVertex();
+            bufferBuilder.vertex(matrix4f, (float) xEnd, (float) yEnd, (float) i).color(n, o, p, m).endVertex();
         }
         
         @Override
@@ -428,9 +421,7 @@ public class DawnConfigScreen extends AbstractTabbedConfigScreen {
             if (!screen.isTransparentBackground())
                 super.renderBackBackground(graphics, buffer, tessellator);
             else {
-                RenderSystem.enableBlend();
-                graphics.blit(ResourceLocation.withDefaultNamespace("textures/gui/menu_list_background.png"), this.left, this.top, this.right, this.bottom, this.width, this.bottom - this.top, 32, 32);
-                RenderSystem.disableBlend();
+                graphics.fillGradient(left, top, right, bottom, 0x68000000, 0x68000000);
             }
         }
         
